@@ -3,7 +3,7 @@
     "name": "ScoreApp",
     "slug": "ScoreApp",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -23,6 +23,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "La aplicación requiere acceder a tu cámara para poder tomar foto de los equipos.",
+          "photosPermission": "La aplicación requiere acceder a tu galería para poder seleccionar imagénes de los equipos."
+        }
+      ],
+      "expo-video"
+    ]
   }
 }
