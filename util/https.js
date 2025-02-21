@@ -49,7 +49,7 @@ export async function getRentEquips() {
     equipments.push(equipObj);
   }
 
-  return equipments.reverse();
+  return equipments;
 }
 
 export function updateRentEquip(id, equipmentData) {
@@ -75,6 +75,7 @@ export async function uploadImage(uri) {
     xhr.send(null);
   });
   const type = blob.type.split('/');
+  //console.log(storage);
   const fileRef = ref(storage, `EquiposRenta/${type[0]}-${uuid.v4()}.${type[1]}`);
   //console.log(fileRef);
   await uploadBytes(fileRef, blob);

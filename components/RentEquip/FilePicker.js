@@ -19,9 +19,8 @@ import { useState } from "react";
 import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
 import { deleteImage, uploadImage } from "../../util/https";
-import { createVideoPlayer, useVideoPlayer, VideoView } from "expo-video";
-import VideoScreen from "./expo-video";
-import VideoAv from "./expo-av";
+import VideoScreen from "../UI/expo-video";
+import VideoAv from "../UI/expo-av";
 
 function FilePicker({ onChangeImage, imageUri }) {
   const [pickedImage, setPickedImage] = useState(imageUri);

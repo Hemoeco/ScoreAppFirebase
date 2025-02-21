@@ -1,11 +1,9 @@
 import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native";
 
 import RentEquipItem from "./RentEquipItem";
-import { useCallback, useEffect, useState } from "react";
-import { getRentEquips } from "../../util/https";
+import { useCallback, useState } from "react";
 
-function RentEquipList({ rentEquips }) {
-  const [rentEqs, setRentEqs] = useState(rentEquips);
+function RentEquipList({ rentEquips, getRentEquips }) {
   const [refreshing, setRefreshing] = useState(false);
 
   //Used to fetch the equipments from the database
@@ -13,9 +11,7 @@ function RentEquipList({ rentEquips }) {
     setRefreshing(true);
     async function getEquips() {
       try {
-        const rent = await getRentEquips();
-        //console.log("p");
-        setRentEqs(rent);
+        await getRentEquips('refresh');
       } catch (error) {
         console.log(error);
       }
@@ -25,7 +21,8 @@ function RentEquipList({ rentEquips }) {
     getEquips();
   }, []);
 
-  if (!rentEqs || rentEqs.length === 0) {
+
+  if (!rentEquips || rentEquips.length === 0) {
     return (
       <View style={styles.fallbackContainer}>
         <Text style={styles.fallbackText}>No se encontraron equipos registrados</Text>
@@ -36,7 +33,7 @@ function RentEquipList({ rentEquips }) {
   return (
     <FlatList
       style={styles.list}
-      data={rentEqs}
+      data={rentEquips}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <RentEquipItem rentEquip={item} />}
       refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}

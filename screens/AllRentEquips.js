@@ -1,36 +1,30 @@
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import RentEquipList from "../components/RentEquip/RentEquipList";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
-import { getRentEquips } from "../util/https";
+import { RentEquipContext } from "../store/rent-equip-context";
 
 function AllRentEquips() {
-  const [rentEquips, setRentEquips] = useState();
-  const [isFetching, setIsFetching] = useState(true);
+  const rentEquipsCtx = useContext(RentEquipContext);
 
   //Used to fetch the equipments from the database
   useEffect(() => {
     async function getEquips() {
-      try {
-        const rent = await getRentEquips();
-        setRentEquips(rent);
-      } catch (error) {
-        console.log(error);
-      }
-      setIsFetching(false);
+      await rentEquipsCtx.setRentEquips('set');
     }
-
     getEquips();
   }, []);
 
-  if (isFetching) {
-    //console.log('cargando');
+  if (rentEquipsCtx.fetching) {
     return (
       <LoadingOverlay message="Cargando equipos" />
     );
   }
-  
+
   return (
-    <RentEquipList rentEquips={rentEquips} />
+    <RentEquipList 
+      rentEquips={rentEquipsCtx.rentEquips} 
+      getRentEquips={rentEquipsCtx.setRentEquips}
+    />
   );
 }
 

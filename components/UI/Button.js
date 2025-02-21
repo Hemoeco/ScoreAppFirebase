@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, Pressable } from "react-native";
+import { Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../consts/colors";
 
@@ -9,7 +9,7 @@ function Button({ onPress, children, icon, size, color }) {
       onPress={onPress}
     >
       <Text style={styles.text}>{children}</Text>
-      <Ionicons name={icon} size={size} color={color} />
+      {/*<Ionicons name={icon} size={size} color={color} />*/}
     </Pressable>
   );
 }

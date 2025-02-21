@@ -7,7 +7,8 @@ import AllRentEquips from './screens/AllRentEquips';
 import { Colors } from './consts/colors';
 import IconButton from './components/UI/IconButton';
 import ManageRentEquips from './screens/ManageRentEquips';
-import { firebaseApp } from './firebase/FirebaseConfig';
+import RentEquipContextProvider from './store/rent-equip-context';
+
 
 const Stack = createNativeStackNavigator();
 //console.log(firebaseApp)
@@ -17,37 +18,39 @@ export default function App() {
     <>
       <StatusBar style="auto" />
       <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { 
-              backgroundColor: Colors.accent300,
-              borderBottomWidth: 2,
-              borderBottomColor: Colors.accent400
-            },
-            headerTintColor: 'black',
-            contentStyle: { backgroundColor: Colors.accent200 }
-          }}
-        >
-          <Stack.Screen 
-            name="AllRentEquips"
-            component={AllRentEquips}
-            options={({ navigation }) => ({
-              title: 'Equipos renta',
-              headerRight: ({ tintColor }) => (
-                <IconButton
-                  icon="add"
-                  size={24}
-                  color={tintColor}
-                  onPress={() => navigation.navigate('ManageRentEquips')}
-                />
-              )
-            })}
-          />
-          <Stack.Screen
-            name="ManageRentEquips"
-            component={ManageRentEquips}
-          />
-        </Stack.Navigator>
+        <RentEquipContextProvider>
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: Colors.accent300,
+                borderBottomWidth: 2,
+                borderBottomColor: Colors.accent400
+              },
+              headerTintColor: 'black',
+              contentStyle: { backgroundColor: Colors.accent200 }
+            }}
+          >
+            <Stack.Screen
+              name="AllRentEquips"
+              component={AllRentEquips}
+              options={({ navigation }) => ({
+                title: 'Equipos renta',
+                headerRight: ({ tintColor }) => (
+                  <IconButton
+                    icon="add"
+                    size={24}
+                    color={tintColor}
+                    onPress={() => navigation.navigate('ManageRentEquips')}
+                  />
+                )
+              })}
+            />
+            <Stack.Screen
+              name="ManageRentEquips"
+              component={ManageRentEquips}
+            />
+          </Stack.Navigator>
+        </RentEquipContextProvider>
       </NavigationContainer>
     </>
   );

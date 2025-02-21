@@ -1,3 +1,5 @@
+//Use expo-av when executing in web because expo-video don't work in web, have a CORS problem.
+
 import { useState, useRef } from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
@@ -7,12 +9,11 @@ export default function VideoAv({ uri, style }) {
   return (
     <Video
       ref={video}
-      style={styles.video}
+      style={style}
       source={{
         uri: uri,
       }}
       useNativeControls
-      
       isLooping
     />
   );
