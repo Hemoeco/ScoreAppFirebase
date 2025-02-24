@@ -9,7 +9,7 @@ function Button({ onPress, children, icon, size, color }) {
       onPress={onPress}
     >
       <Text style={styles.text}>{children}</Text>
-      {/*<Ionicons name={icon} size={size} color={color} />*/}
+      {!!icon && <Ionicons name={icon} size={size} color={color} />}
     </Pressable>
   );
 }
@@ -18,19 +18,21 @@ export default Button;
 
 const styles = StyleSheet.create({
   button: {
+    flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    flexDirection: 'row',
-    margin: 4,
-    backgroundColor: Colors.accent500,
+    margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
+    borderWidth: 2,
+    borderColor: Colors.accent500,
+    backgroundColor: Colors.accent300,
     shadowColor: 'black',
     shadowOpacity: 0.15,
     shadowOffset: { width: 1, height: 1 },
     shadowRadius: 2,
-    borderRadius: 4 //For border corners
+    borderRadius: 7 //For border corners
   },
   pressed: {
     opacity: 0.7
@@ -38,7 +40,6 @@ const styles = StyleSheet.create({
   text: {
     textAlign: 'center',
     fontSize: 16,
-    color: 'black',
     paddingHorizontal: 7 
   }
 });

@@ -15,14 +15,16 @@ import {
   PermissionStatus,
   useCameraPermissions
 } from "expo-image-picker";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
 import { deleteImage, uploadImage } from "../../util/https";
 import VideoScreen from "../UI/expo-video";
 import VideoAv from "../UI/expo-av";
+import { AuthContext } from "../../store/auth-context";
 
 function FilePicker({ onChangeImage, imageUri }) {
+  const authCtx = useContext(AuthContext);
   const [pickedImage, setPickedImage] = useState(imageUri);
   const [isVideo, setIsVideo] = useState(imageUri?.includes('video'));
   //Permissions for access the camera
@@ -130,7 +132,7 @@ function FilePicker({ onChangeImage, imageUri }) {
 
   if (pickedImage) {
     if (isVideo) {
-      if (Platform.OS == 'web') {
+      if (authCtx.device == 'web') {
         image = <VideoAv uri={pickedImage} style={styles.image} />
       }
       else {

@@ -136,7 +136,6 @@ function RentEquipContextProvider({ children }) {
     errorHandler: errorHandler
   };
 
-
   return (
     <RentEquipContext.Provider value={value}>
       {children}

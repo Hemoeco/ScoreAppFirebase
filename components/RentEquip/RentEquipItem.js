@@ -2,7 +2,6 @@ import { View, Image, Text, Pressable, StyleSheet } from "react-native";
 import { Colors } from "../../consts/colors";
 import { useNavigation } from "@react-navigation/native";
 
-
 function RentEquipItem({ rentEquip }) {
   const navigation = useNavigation();
   let image = (

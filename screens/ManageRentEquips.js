@@ -9,8 +9,6 @@ function ManageRentEquips({ navigation, route }) {
   const rentEquipsCtx = useContext(RentEquipContext);
   //Data of the equipment selected
   const equipData = route.params?.equipData;
-  const imageEquipUri = equipData ? equipData.imagen : '';
-  const rentEquipId = equipData ? equipData.id : '';
   //To know if the action needs to be create or update
   const isEditing = !!equipData;
 
@@ -45,8 +43,6 @@ function ManageRentEquips({ navigation, route }) {
   return (
     <RentEquipForm
       equipData={equipData}
-      saveHandler={rentEquipsCtx.saveRentEquipData}
-      deleteHandler={rentEquipsCtx.deleteEquip.bind(this, rentEquipId, imageEquipUri)}
       isEditing={isEditing}
     />
   );

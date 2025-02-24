@@ -6,14 +6,21 @@ import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
 import FilePicker from "./FilePicker";
 import { RentEquip } from "../../models/rentEquip";
+import { RentEquipContext } from "../../store/rent-equip-context";
+import { AuthContext } from "../../store/auth-context";
 
 function RentEquipForm({
   equipData,
-  saveHandler,
-  deleteHandler,
   isEditing
 }) {
-  //const rentEquipsCtx = useContext(RentEquipContext);
+  //Context with the functions
+  const rentEquipsCtx = useContext(RentEquipContext);
+  const authCtx = useContext(AuthContext);
+  
+  //Data of the equipment selected
+  const imageEquipUri = equipData ? equipData.imagen : '';
+  const rentEquipId = equipData ? equipData.id : '';
+  
   //Used for set/update the equipment's data
   const [validName, setValidName] = useState(true);
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
@@ -52,32 +59,18 @@ function RentEquipForm({
       return;
     }
     const equip = new RentEquip(enteredName, enteredDesc, selectedImage);
-    saveHandler(isEditing, equipData?.id, equip, selectedImage, deleteImageUri);
+    rentEquipsCtx.saveRentEquipData(isEditing, equipData?.id, equip, selectedImage, deleteImageUri);
   }
 
   return (
     <View style={styles.form}>
-      <View style={styles.buttonContainer}>
-        <IconButton
-          icon="arrow-undo"
-          size={24}
-          onPress={navigation.goBack}
-        />
-        <IconButton
-          icon="save"
-          size={24}
-          onPress={onSave}
-        />
-        {isEditing && (
-          <IconButton
-            icon="trash"
-            size={24}
-            onPress={deleteHandler}
-          />
-        )}
-      </View>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="always">
         <View>
+          <Text style={styles.label}>Multimedia</Text>
+          <FilePicker
+            onChangeImage={onChangeImage}
+            imageUri={selectedImage}
+          />
           <Text style={[styles.label, !validName && styles.invalidLabel]}>
             Nombre
           </Text>
@@ -93,11 +86,25 @@ function RentEquipForm({
             onChangeText={onChangeDesc}
             value={enteredDesc}
           />
-          <Text style={styles.label}>Imagen</Text>
-          <FilePicker 
-            onChangeImage={onChangeImage} 
-            imageUri={selectedImage} 
+        </View>
+        <View style={styles.buttonContainer}>
+          <IconButton
+            icon="arrow-undo"
+            size={24}
+            onPress={navigation.goBack}
           />
+          <IconButton
+            icon="save"
+            size={24}
+            onPress={onSave}
+          />
+          {isEditing && (
+            <IconButton
+              onPress={rentEquipsCtx.deleteEquip.bind(this, rentEquipId, imageEquipUri)}
+              icon="trash"
+              size={24}
+            />
+          )}
         </View>
       </ScrollView>
     </View>
