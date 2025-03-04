@@ -18,12 +18,11 @@ import {
 import { useContext, useState } from "react";
 import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
-import { deleteImage, uploadImage } from "../../util/https";
 import VideoScreen from "../UI/expo-video";
 import VideoAv from "../UI/expo-av";
 import { AuthContext } from "../../store/auth-context";
 
-function FilePicker({ onChangeImage, imageUri }) {
+function FilePicker({ onChangeImage, imageUri, isEditing }) {
   const authCtx = useContext(AuthContext);
   const [pickedImage, setPickedImage] = useState(imageUri);
   const [isVideo, setIsVideo] = useState(imageUri?.includes('video'));
@@ -80,7 +79,6 @@ function FilePicker({ onChangeImage, imageUri }) {
         pickedImage.includes('firebasestorage') ? pickedImage : ''
       );
       setPickedImage(uri);
-      console.log(image);
     }
   }
 
@@ -112,22 +110,6 @@ function FilePicker({ onChangeImage, imageUri }) {
     setIsVideo(false);
   }
 
-  //Temporary to do tests
-  async function uploadImageHandler() {
-    const url = await uploadImage(pickedImage);
-    console.log(url);
-  }
-
-  //Temporary to do tests
-  async function deleteImageFB() {
-    try {
-      const deleted = await deleteImage(pickedImage);
-      console.log(deleted);
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   let image = <Text>Sin imagen seleccionada.</Text>;
 
   if (pickedImage) {
@@ -150,17 +132,18 @@ function FilePicker({ onChangeImage, imageUri }) {
         {image}
       </View>
       <View style={styles.buttonContainer}>
-        {Platform.OS != 'web' && <IconButton icon="camera" onPress={takeImageHandler} size={24} />}
-        <IconButton icon="image" onPress={selectImageHandler} size={24} />
-        {/*!!pickedImage && (
-          <IconButton icon="cloud-upload" onPress={uploadImageHandler} size={24} />
+        {authCtx.device !== 'web' &&
+          (authCtx.isConnected || !authCtx.isConnected && !isEditing)
+          && (
+            <IconButton icon="camera" onPress={takeImageHandler} size={24} />
+          )}
+        {(authCtx.isConnected || !authCtx.isConnected && !isEditing) && (
+          <IconButton icon="image" onPress={selectImageHandler} size={24} />
         )}
-        {!!pickedImage && (
-          <IconButton icon="trash-bin" onPress={deleteImageFB} size={24} />
-        )*/}
-        {!!pickedImage && (
-          <IconButton icon="remove-circle" onPress={deleteImageHandler} size={24} />
-        )}
+        {!!pickedImage && (authCtx.isConnected || !authCtx.isConnected && !isEditing)
+          && (
+            <IconButton icon="remove-circle" onPress={deleteImageHandler} size={24} />
+          )}
       </View>
     </View>
   );

@@ -9,7 +9,7 @@ export default function VideoAv({ uri, style }) {
   return (
     <Video
       ref={video}
-      style={style}
+      style={[styles.video, style]}
       source={{
         uri: uri,
       }}
@@ -27,8 +27,6 @@ const styles = StyleSheet.create({
   },
   video: {
     alignSelf: 'center',
-    width: 320,
-    height: 200,
   },
   buttons: {
     flexDirection: 'row',

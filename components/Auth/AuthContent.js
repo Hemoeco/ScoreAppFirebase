@@ -23,7 +23,7 @@ function AuthContent({ isLogin }) {
   }
 
   return (
-    <ScrollView>
+    <ScrollView keyboardShouldPersistTaps="always">
       <View style={styles.authContent}>
         <View style={styles.center}>
           <Text style={styles.text}>SCORE 2.0</Text>
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: Colors.accent400,
+    backgroundColor: Colors.accent300,
     elevation: 2,
     shadowColor: 'black',
     shadowOffset: { width: 1, height: 1 },

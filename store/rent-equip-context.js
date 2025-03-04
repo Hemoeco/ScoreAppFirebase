@@ -1,5 +1,6 @@
-import { createContext, useReducer, useState } from "react";
+import { createContext, useContext, useReducer, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "./auth-context";
 
 import {
   getRentEquips,
@@ -8,7 +9,7 @@ import {
   deleteRentEquip,
   uploadImage,
   deleteImage,
-} from "../util/https";
+} from "../util/database";
 
 export const RentEquipContext = createContext({
   rentEquips: [],
@@ -26,6 +27,7 @@ export const RentEquipContext = createContext({
 function rentEquipsReducer(state, action) {
   switch (action.type) {
     case 'ADD':
+      console.log(action.payload);
       return [action.payload, ...state];
     case 'SET':
       const inverted = action.payload.reverse();
@@ -46,6 +48,7 @@ function rentEquipsReducer(state, action) {
 }
 
 function RentEquipContextProvider({ children }) {
+  const authCtx = useContext(AuthContext);
   const [rentEquipsState, dispatch] = useReducer(rentEquipsReducer, []);
   //To know if the user is submitting the info
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,24 +77,26 @@ function RentEquipContextProvider({ children }) {
   }
 
   //Saves the data of the equip, could be add or update.
-  async function saveRentEquipData(isEditing, rentEquipId, rentEquipData, selectedImage, deleteImageUri) {
+  async function saveRentEquipData(isEditing, rentEquipId, rentEquipData, 
+    selectedImage, deleteImageUri) {
     setIsSubmitting(true);
     try {
-      if (deleteImageUri) {
+      //Delete the image from the database only when the device has connection
+      if (deleteImageUri && authCtx.isConnected) {
         await deleteImage(deleteImageUri);
       }
 
       if (selectedImage && !selectedImage.includes('firebasestorage')) {
-        const imageUrl = await uploadImage(selectedImage);
+        const imageUrl = await uploadImage(selectedImage, authCtx.isConnected);
         rentEquipData.imagen = imageUrl;
       }
 
       if (isEditing) {
-        await updateRentEquip(rentEquipId, rentEquipData);
+        await updateRentEquip(rentEquipId, rentEquipData, authCtx.isConnected);
         rentEquipData.__setId(rentEquipId);
         dispatch({ type: 'UPDATE', payload: { id: rentEquipId, equip: rentEquipData } });
       } else {
-        const equipId = await saveRentEquip(rentEquipData);
+        const equipId = await saveRentEquip(rentEquipData, authCtx.isConnected);
         rentEquipData.__setId(equipId)
         dispatch({ type: 'ADD', payload: rentEquipData });
       }
@@ -107,10 +112,10 @@ function RentEquipContextProvider({ children }) {
   async function deleteEquip(rentEquipId, imageEquipUri) {
     setIsSubmitting(true);
     try {
-      if (imageEquipUri) {
+      if (imageEquipUri, authCtx.isConnected) {
         await deleteImage(imageEquipUri);
       }
-      await deleteRentEquip(rentEquipId);
+      await deleteRentEquip(rentEquipId, authCtx.isConnected);
       dispatch({ type: 'DELETE', payload: rentEquipId });
       navigation.goBack();
     } catch (error) {

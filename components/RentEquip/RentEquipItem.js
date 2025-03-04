@@ -1,9 +1,15 @@
 import { View, Image, Text, Pressable, StyleSheet } from "react-native";
 import { Colors } from "../../consts/colors";
 import { useNavigation } from "@react-navigation/native";
+import * as VideoThumbnails from 'expo-video-thumbnails';
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../store/auth-context";
 
 function RentEquipItem({ rentEquip }) {
+  const [thumbnail, setThumbnail] = useState();
+  const authCtx = useContext(AuthContext);
   const navigation = useNavigation();
+
   let image = (
     <View style={[styles.imageContainer, { justifyContent: 'center', alignItems: 'center' }]}>
       <Text style={styles.description}>
@@ -12,8 +18,23 @@ function RentEquipItem({ rentEquip }) {
     </View>
   );
 
+  useEffect(() => {
+    if (authCtx.device !== 'web' && rentEquip.imagen && rentEquip.imagen.includes('video')) {
+      async function getThumbnail() {
+        const { uri } = await VideoThumbnails.getThumbnailAsync(rentEquip.imagen, {
+          time: 15000,
+        });
+        setThumbnail(uri);
+      }
+      getThumbnail();
+    }
+    else{
+      setThumbnail(null);
+    }
+  }, [rentEquip]);
+
   if (rentEquip.imagen !== '') {
-    image = <Image style={styles.imageContainer} source={{ uri: rentEquip.imagen }} />
+    image = <Image style={styles.imageContainer} source={{ uri: thumbnail ?? rentEquip.imagen }} />
   }
 
   function editEquipHandler() {
@@ -48,7 +69,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     backgroundColor: Colors.accent300,
     borderWidth: 2,
-    borderColor: Colors.accent400,
+    borderColor: Colors.accent300,
     elevation: 2,
     shadowColor: 'black',
     shadowOpacity: 0.15,

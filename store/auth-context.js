@@ -1,10 +1,12 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { authenticateFirebase } from "../util/auth"
+import NetInfo from '@react-native-community/netinfo';
 
 export const AuthContext = createContext({
   token: '',
   device: '',
+  isConnected: false,
   isAuthenticated: false,
   isAuthenticating: false,
   authenticate: async (user, authMode) => { },
@@ -14,6 +16,14 @@ export const AuthContext = createContext({
 function AuthContextProvider({ children }) {
   const [authToken, setAuthToken] = useState();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isConnected, setIsConnected] = useState(null);
+
+  useEffect(() => {
+    // Subscribe to network state updates
+    NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+  }, []);
 
   async function authenticate(user, authMode) {
     setIsAuthenticating(true);
@@ -44,6 +54,7 @@ function AuthContextProvider({ children }) {
     device: Platform.OS,
     isAuthenticated: !!authToken,
     isAuthenticating: isAuthenticating,
+    isConnected: isConnected,
     authenticate: authenticate,
     logout: logout
   }

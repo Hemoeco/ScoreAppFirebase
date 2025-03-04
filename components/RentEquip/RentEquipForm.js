@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
@@ -8,19 +8,22 @@ import FilePicker from "./FilePicker";
 import { RentEquip } from "../../models/rentEquip";
 import { RentEquipContext } from "../../store/rent-equip-context";
 import { AuthContext } from "../../store/auth-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 function RentEquipForm({
   equipData,
   isEditing
 }) {
+  const headerHeight = useHeaderHeight(); // Obtener la altura del header automáticamente
+
   //Context with the functions
   const rentEquipsCtx = useContext(RentEquipContext);
   const authCtx = useContext(AuthContext);
-  
+
   //Data of the equipment selected
   const imageEquipUri = equipData ? equipData.imagen : '';
   const rentEquipId = equipData ? equipData.id : '';
-  
+
   //Used for set/update the equipment's data
   const [validName, setValidName] = useState(true);
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
@@ -63,13 +66,18 @@ function RentEquipForm({
   }
 
   return (
-    <View style={styles.form}>
-      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="always">
+    <KeyboardAvoidingView
+      behavior={authCtx.device === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={headerHeight / 2} // Ajusta según la altura del header
+      style={styles.form}
+    >
+      <ScrollView keyboardShouldPersistTaps="always">
         <View>
           <Text style={styles.label}>Multimedia</Text>
           <FilePicker
             onChangeImage={onChangeImage}
             imageUri={selectedImage}
+            isEditing={isEditing}
           />
           <Text style={[styles.label, !validName && styles.invalidLabel]}>
             Nombre
@@ -93,12 +101,14 @@ function RentEquipForm({
             size={24}
             onPress={navigation.goBack}
           />
-          <IconButton
-            icon="save"
-            size={24}
-            onPress={onSave}
-          />
-          {isEditing && (
+          {(authCtx.isConnected || !authCtx.isConnected && !isEditing) && (
+            <IconButton
+              icon="save"
+              size={24}
+              onPress={onSave}
+            />
+          )}
+          {isEditing && authCtx.isConnected && (
             <IconButton
               onPress={rentEquipsCtx.deleteEquip.bind(this, rentEquipId, imageEquipUri)}
               icon="trash"
@@ -107,7 +117,7 @@ function RentEquipForm({
           )}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -115,12 +125,8 @@ export default RentEquipForm;
 
 const styles = StyleSheet.create({
   form: {
-    marginTop: 10,
     flex: 1,
     margin: 10
-  },
-  scrollView: {
-    marginTop: 20
   },
   label: {
     fontWeight: 'bold',

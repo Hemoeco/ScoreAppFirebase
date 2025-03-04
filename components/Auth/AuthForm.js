@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 2,
     //borderColor: Colors.accent400,
-    backgroundColor: Colors.accent300,
+    backgroundColor: Colors.accent200,
     borderRadius: 4
   },
   invalidLabel: {

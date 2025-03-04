@@ -1,6 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItem,
+  DrawerItemList
+} from '@react-navigation/drawer';
+import { Ionicons } from "@expo/vector-icons";
+import { useContext } from 'react';
 
 import { Colors } from './consts/colors';
 import IconButton from './components/UI/IconButton';
@@ -10,9 +18,70 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import AllRentEquips from './screens/AllRentEquips';
 import ManageRentEquips from './screens/ManageRentEquips';
-import { useContext } from 'react';
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+
+function CustomDrawerContent(props) {
+  const authCtx = useContext(AuthContext);
+  return (
+    <DrawerContentScrollView
+      {...props}
+      style={{
+        backgroundColor: Colors.accent300
+      }}
+    >
+      <DrawerItemList {...props} />
+      <DrawerItem
+        label="Cerrar sesión"
+        labelStyle={{
+          color: 'black',
+          fontSize: 15
+        }}
+        icon={() => (
+          <Ionicons name="log-out-outline" size={25} />
+        )}
+        onPress={() => authCtx.logout()}
+      />
+    </DrawerContentScrollView>
+  );
+}
+
+function DrawerNavigator() {
+  return (
+    <Drawer.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: Colors.accent300,
+        },
+        sceneStyle: { backgroundColor: Colors.accent200 },
+        drawerActiveTintColor: 'black',
+        drawerActiveBackgroundColor: Colors.accent200,
+        keyboardHandlingEnabled: false
+      }}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
+      <Drawer.Screen
+        name="AllRentEquips"
+        component={AllRentEquips}
+        options={({ navigation }) => ({
+          title: 'Equipos renta',
+          headerRight: ({ tintColor }) => (
+            <IconButton
+              icon="add"
+              size={24}
+              color={tintColor}
+              onPress={() => navigation.navigate('ManageRentEquips')}
+            />
+          ),
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="list" color={color} size={size} />
+          )
+        })}
+      />
+    </Drawer.Navigator>
+  );
+}
 
 function Authenticated() {
   return (
@@ -21,13 +90,18 @@ function Authenticated() {
         screenOptions={{
           headerStyle: {
             backgroundColor: Colors.accent300,
-            borderBottomWidth: 2,
-            borderBottomColor: Colors.accent400
           },
           contentStyle: { backgroundColor: Colors.accent200 }
         }}
       >
-        <Stack.Screen
+        {<Stack.Screen
+          name="Drawer"
+          component={DrawerNavigator}
+          options={{
+            headerShown: false
+          }}
+        />}
+        {/*<Stack.Screen
           name="AllRentEquips"
           component={AllRentEquips}
           options={({ navigation }) => ({
@@ -41,7 +115,7 @@ function Authenticated() {
               />
             )
           })}
-        />
+        />*/}
         <Stack.Screen
           name="ManageRentEquips"
           component={ManageRentEquips}
@@ -55,9 +129,8 @@ function NotAuthenticated() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.accent400 },
-        //headerTintColor: 'white',
-        contentStyle: { backgroundColor: Colors.accent300 },
+        headerStyle: { backgroundColor: Colors.accent300 },
+        contentStyle: { backgroundColor: Colors.accent200 },
       }}
     >
       <Stack.Screen
@@ -80,6 +153,7 @@ function NotAuthenticated() {
 
 function Navigation() {
   const authCtx = useContext(AuthContext);
+  console.log(authCtx.isConnected);
 
   return (
     <NavigationContainer>
@@ -89,8 +163,9 @@ function Navigation() {
         for sign up/in, else we load the screen for welcome (in that we can have more
         screens, in this case is just one for welcome).
       */}
-      {!authCtx.isAuthenticated && <NotAuthenticated />}
-      {authCtx.isAuthenticated && <Authenticated />}
+      {/*!authCtx.isAuthenticated && <NotAuthenticated />}
+      {authCtx.isAuthenticated && <Authenticated />*/}
+      {<Authenticated />}
     </NavigationContainer>
   );
 }

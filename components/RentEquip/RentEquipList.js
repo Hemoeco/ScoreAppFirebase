@@ -1,14 +1,17 @@
 import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native";
 
 import RentEquipItem from "./RentEquipItem";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
+import { RentEquipContext } from "../../store/rent-equip-context";
 
 function RentEquipList({ rentEquips, getRentEquips }) {
   const [refreshing, setRefreshing] = useState(false);
+  const equipCtx = useContext(RentEquipContext);
 
   //Used to fetch the equipments from the database
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    
     async function getEquips() {
       try {
         await getRentEquips('refresh');
@@ -17,10 +20,13 @@ function RentEquipList({ rentEquips, getRentEquips }) {
       }
       setRefreshing(false);
     }
-
     getEquips();
   }, []);
 
+  //This evits renderize the list of equipments if the the user is refreshing
+  if(refreshing) {
+    return;
+  }
 
   if (!rentEquips || rentEquips.length === 0) {
     return (

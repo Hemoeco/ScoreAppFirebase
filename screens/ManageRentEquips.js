@@ -23,7 +23,7 @@ function ManageRentEquips({ navigation, route }) {
   //    ]
   //  });
   //}
-//
+  //
 
   //Put the title depending if is editing or creating
   useLayoutEffect(() => {
