@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { getApps, initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
+import { getDatabase } from "firebase/database";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -17,4 +18,10 @@ export const firebaseConfig = {
 
 // Editing this file with fast refresh will reinitialize the app on every refresh, let's not do that
 const firebaseApp = initializeApp(firebaseConfig);
-export const storage = getStorage(firebaseApp);
+const rtDatabase = getDatabase(firebaseApp);
+const storage = getStorage(firebaseApp);
+console.log(rtDatabase);
+
+ispersi
+
+export {rtDatabase, storage};

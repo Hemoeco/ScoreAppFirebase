@@ -7,9 +7,12 @@ import {
   saveRentEquip,
   updateRentEquip,
   deleteRentEquip,
-  uploadImage,
-  deleteImage,
 } from "../util/database";
+
+import { 
+  uploadImage,
+  deleteImage
+} from "../util/storage";
 
 export const RentEquipContext = createContext({
   rentEquips: [],
