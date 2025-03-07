@@ -8,7 +8,7 @@ import {
   DrawerItemList
 } from '@react-navigation/drawer';
 import { Ionicons } from "@expo/vector-icons";
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { Colors } from './consts/colors';
 import IconButton from './components/UI/IconButton';
@@ -84,6 +84,18 @@ function DrawerNavigator() {
 }
 
 function Authenticated() {
+  const [dbInitialized, setDbInitialized] = useState(false);
+
+  //useEffect(() => {
+  //  init()
+  //    .then(() => {
+  //      setDbInitialized(true);
+  //    })
+  //    .catch((err) => {
+  //      console.log(err);
+  //    });
+  //}, []);
+
   return (
     <RentEquipContextProvider>
       <Stack.Navigator
@@ -163,9 +175,9 @@ function Navigation() {
         for sign up/in, else we load the screen for welcome (in that we can have more
         screens, in this case is just one for welcome).
       */}
-      {/*!authCtx.isAuthenticated && <NotAuthenticated />}
-      {authCtx.isAuthenticated && <Authenticated />*/}
-      {<Authenticated />}
+      {!authCtx.isAuthenticated && <NotAuthenticated />}
+      {authCtx.isAuthenticated && <Authenticated />}
+      {/*<Authenticated />*/}
     </NavigationContainer>
   );
 }

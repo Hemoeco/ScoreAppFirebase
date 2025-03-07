@@ -1,21 +1,21 @@
-import axios from 'axios';
-import { firebaseConfig } from '../firebase/FirebaseConfig';
+import { auth } from '../firebase/FirebaseConfig';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-export async function authenticateFirebase(user, authMode) {
-  const url = `https://identitytoolkit.googleapis.com/v1/accounts:${authMode}?key=${firebaseConfig.apiKey}`;
-  const email = user.email;
-  const password = user.password;
-
-  const response = await axios.post(url,
-    //The object below will be converted to JSON automatically by axios.
-    {
-      email: email,
-      password: password,
-      returnSecureToken: true
-    }
-  );
-
-  const token = response.data.idToken;
-
-  return token;
+export async function signIn(user) {
+  const userCredential = await signInWithEmailAndPassword(auth, user.email, user.password);
+  return userCredential;
 }
+
+export async function createUser(user) {
+  const userCredential = await createUserWithEmailAndPassword(auth, user.email, user.password);
+  //Uncomment this when its necessary send an email verification.
+  //const test = await sendEmailVerification(userCredential.user);
+
+  return userCredential;
+}
+
+export async function logOff() {
+  const logout = await signOut(auth);
+  return logout;
+}
+

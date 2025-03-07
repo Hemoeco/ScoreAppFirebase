@@ -16,7 +16,7 @@ export async function saveRentEquip(equipRentData, isConnected) {
         Add "/nameSegment.json" at the end of the root, we can add any segments we want there
         and will be translated as nodes or folders in the DB. 
         This is a Firebase specific to understand that we're targeting a specific node in the DB
-        and doing this will create a new node in the database, in this case one named "nodes".
+        and doing this will create a new node in the database, in this case, one named "nodes".
       */
       `${BACKEND_URL}/${TABLE_NAME}.json`,
       /*
@@ -67,7 +67,7 @@ export function deleteRentEquip(id, isConnected) {
   }
 }
 
-export async function uploadImage(uri, isConnected) {
+export async function uploadImage(uri, isConnected, token) {
   let url = uri;
 
   if (isConnected) {

@@ -1,7 +1,8 @@
 import { createContext, useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
-import { authenticateFirebase } from "../util/auth"
+import { createUser, signIn, logOff } from "../util/auth"
 import NetInfo from '@react-native-community/netinfo';
+import { AuthModes } from "../consts/auth";
 
 export const AuthContext = createContext({
   token: '',
@@ -10,7 +11,7 @@ export const AuthContext = createContext({
   isAuthenticated: false,
   isAuthenticating: false,
   authenticate: async (user, authMode) => { },
-  logout: () => { }
+  logout: async () => { }
 });
 
 function AuthContextProvider({ children }) {
@@ -28,8 +29,14 @@ function AuthContextProvider({ children }) {
   async function authenticate(user, authMode) {
     setIsAuthenticating(true);
     try {
-      const token = await authenticateFirebase(user, authMode);
-      setAuthToken(token);
+      let userCredentials;
+      if (authMode === AuthModes.login) {
+        userCredentials = await signIn(user);
+      }
+      else {
+        userCredentials = await createUser(user);
+      }
+      setAuthToken(userCredentials.user.accessToken);
     }
     catch (err) {
       if (Platform.OS !== 'web') {
@@ -39,14 +46,20 @@ function AuthContextProvider({ children }) {
         );
       }
       else {
-        window.alert(`Error: ${err.response.data.error.message}`);
+        console.log(err);
+        window.alert(`Error: ${err}`);
       }
     }
     setIsAuthenticating(false);
   }
 
-  function logout() {
-    setAuthToken(null);
+  async function logout() {
+    try {
+      const test = await logOff();
+      setAuthToken(null);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const value = {

@@ -87,7 +87,7 @@ function RentEquipContextProvider({ children }) {
       }
 
       if (selectedImage && !selectedImage.includes('firebasestorage')) {
-        const imageUrl = await uploadImage(selectedImage, authCtx.isConnected);
+        const imageUrl = await uploadImage(selectedImage, authCtx.isConnected, authCtx.token);
         rentEquipData.imagen = imageUrl;
       }
 
