@@ -32,7 +32,8 @@
           "photosPermission": "La aplicación requiere acceder a tu galería para poder seleccionar imagénes de los equipos."
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-sqlite"
     ]
   }
 }

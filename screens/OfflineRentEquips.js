@@ -3,16 +3,17 @@ import RentEquipList from "../components/RentEquip/RentEquipList";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import { RentEquipContext } from "../store/rent-equip-context";
 
-function AllRentEquips() {
+function OfflineRentEquips() {
   const rentEquipsCtx = useContext(RentEquipContext);
 
   //Used to fetch the equipments from the database
   useEffect(() => {
-    async function getEquips() {
-      await rentEquipsCtx.setRentEquips('set');
+    if (rentEquipsCtx.rentEquips.length === 0) {
+      async function getEquips() {
+        await rentEquipsCtx.setRentEquips(true);
+      }
+      getEquips();
     }
-    
-    getEquips();
   }, []);
 
   if (rentEquipsCtx.fetching) {
@@ -22,11 +23,11 @@ function AllRentEquips() {
   }
 
   return (
-    <RentEquipList 
-      rentEquips={rentEquipsCtx.rentEquips} 
-      getRentEquips={rentEquipsCtx.setRentEquips}
+    <RentEquipList
+      rentEquips={rentEquipsCtx.rentEquips.filter((equip) => equip.disponibleOffline)}
+      local
     />
   );
 }
 
-export default AllRentEquips;
+export default OfflineRentEquips;

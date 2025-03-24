@@ -9,6 +9,7 @@ import { RentEquip } from "../../models/rentEquip";
 import { RentEquipContext } from "../../store/rent-equip-context";
 import { AuthContext } from "../../store/auth-context";
 import { useHeaderHeight } from "@react-navigation/elements";
+import Checkbox from "expo-checkbox";
 
 function RentEquipForm({
   equipData,
@@ -29,6 +30,7 @@ function RentEquipForm({
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
   const [enteredDesc, setEnteredDesc] = useState(equipData ? equipData.descripcion : '');
   const [selectedImage, setSelectedImage] = useState(equipData ? equipData.imagen : '');
+  const [availableOffline, setAvailableOffline] = useState(equipData ? equipData.offline : false);
   const [deleteImageUri, setDeleteImageUri] = useState('');
   const navigation = useNavigation();
 
@@ -61,7 +63,7 @@ function RentEquipForm({
       setValidName(false);
       return;
     }
-    const equip = new RentEquip(enteredName, enteredDesc, selectedImage);
+    const equip = new RentEquip(enteredName, enteredDesc, selectedImage, availableOffline);
     rentEquipsCtx.saveRentEquipData(isEditing, equipData?.id, equip, selectedImage, deleteImageUri);
   }
 
@@ -94,6 +96,8 @@ function RentEquipForm({
             onChangeText={onChangeDesc}
             value={enteredDesc}
           />
+          <Text style={styles.label}>Disponible sin conexión</Text>
+          <Checkbox value={availableOffline} onValueChange={setAvailableOffline} />
         </View>
         <View style={styles.buttonContainer}>
           <IconButton
@@ -110,7 +114,7 @@ function RentEquipForm({
           )}
           {isEditing && authCtx.isConnected && (
             <IconButton
-              onPress={rentEquipsCtx.deleteEquip.bind(this, rentEquipId, imageEquipUri)}
+              onPress={rentEquipsCtx.deleteEquip.bind(this, equipData)}
               icon="trash"
               size={24}
             />

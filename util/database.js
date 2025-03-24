@@ -1,34 +1,26 @@
-import axios from "axios";
 import { ref, set, push, update, remove, get } from "firebase/database";
 import uuid from 'react-native-uuid';
 
 import { RentEquip } from "../models/rentEquip";
 import { rtDatabase } from "../firebase/FirebaseConfig";
+import { readLocalData, saveLocalData } from "./local";
 
-const BACKEND_URL = 'https://score-test-4e44a-default-rtdb.firebaseio.com';
+//const BACKEND_URL = 'https://score-test-4e44a-default-rtdb.firebaseio.com';
 const TABLE_NAME = 'EquiposRenta'
 
-export async function saveRentEquip(equipRentData, isConnected) {
-  let id = uuid.v4();
-  if (isConnected) {
-    //Create the reference to the table.
-    const reference = ref(rtDatabase, TABLE_NAME);
-    //Generates a new id.
-    const newEquip = push(reference);
-    //Upload the new equipment.
-    await set(newEquip, equipRentData);
-
-    id = newEquip.key; //Saves the new id only if the upload was correct.
-  }
-
-  return id;
-}
-
-export async function getRentEquips() {
-  const reference = ref(rtDatabase, TABLE_NAME);
-  const response = await get(reference);//axios.get(`${BACKEND_URL}/${TABLE_NAME}.json`);
-  //console.log(response.val());
+/**
+ * Retrieves the data from Firebase and updates the local data.
+ * @returns 
+*/
+export async function getRentEquips(connection) {
   const equipments = [];
+  //Get the local equipments which data hasn't been updated whithout connection.
+  const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
+  //Get the local equipments which data has been updated whithout connection. 
+  const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
+  //Get the equipments from Firebase.
+  const reference = ref(rtDatabase, TABLE_NAME);
+  const response = await get(reference);
 
   /*
    The ".data" is given by Axios, and is a property of the response object which holds 
@@ -38,26 +30,67 @@ export async function getRentEquips() {
    an array of objects that have the format we want them to have.
   */
   for (const key in response.val()) {
-    const equip = response.child(key).val();
-    let equipObj = new RentEquip(equip.nombre, equip.descripcion, equip.imagen);
-    equipObj.__setId(key);
-
-    equipments.push(equipObj);
+    /*
+      Add the equipments from Firebase that hasn't been updated without connection.
+      This is done because we don't want to lose the data locally saved.
+    */
+    if (!localUpdated.find(equip => equip.idFirebase === key)) {
+      const equip = response.child(key).val();
+      const equipObj = new RentEquip(equip.nombre, equip.descripcion,
+                                     equip.imagen, equip.disponibleOffline);
+      
+      equipObj.__setId(key);
+      
+      await updateLocalData(equipObj, connection, localEquipments);
+      
+      equipments.push(equipObj);
+    }
   }
 
   return equipments;
 }
 
-export async function updateRentEquip(id, equipmentData, isConnected) {
-  if (isConnected) {
-    const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
-    await update(reference, equipmentData);
+/**
+ * Used to known if is necessary to create or update the local data.
+ * @param {*} equip 
+*/
+async function updateLocalData(equip, connection, localEquipments) {
+  //Check if the equip must be in the local DB.
+  if(equip.disponibleOffline) {
+    equip.__setUpdatedOffline(!connection);
+    
+    //If already in DB, then update the info (UPDATE).
+    if(localEquipments.find(e => e.idFirebase === equip.id)){
+      await updateLocalData(equip);
+    }
+    //In case it isn't in the local DB, then add it (CREATE).
+    else {
+      await saveLocalData(equip);
+    }
   }
 }
 
-export async function deleteRentEquip(id, isConnected) {
-  if (isConnected) {
-    const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
-    await remove(reference);
-  }
+export async function saveRentEquip(equipRentData) {
+  let id = uuid.v4();
+
+  //Create the reference to the table.
+  const reference = ref(rtDatabase, TABLE_NAME);
+  //Generates a new id.
+  const newEquip = push(reference);
+  //Upload the new equipment.
+  await set(newEquip, equipRentData);
+
+  id = newEquip.key; //Saves the new id only if the upload was correct.
+
+  return id;
+}
+
+export async function updateRentEquip(id, equipmentData) {
+  const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
+  await update(reference, equipmentData);
+}
+
+export async function deleteRentEquip(id) {
+  const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
+  await remove(reference);
 }

@@ -44,6 +44,7 @@ function AuthContextProvider({ children }) {
           '¡Falló la autenticación!',
           'Verifica que hayas ingresado tus datos correctamente.'
         );
+        console.log(err);
       }
       else {
         console.log(err);

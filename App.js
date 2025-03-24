@@ -8,7 +8,7 @@ import {
   DrawerItemList
 } from '@react-navigation/drawer';
 import { Ionicons } from "@expo/vector-icons";
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { Colors } from './consts/colors';
 import IconButton from './components/UI/IconButton';
@@ -18,6 +18,8 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import AllRentEquips from './screens/AllRentEquips';
 import ManageRentEquips from './screens/ManageRentEquips';
+import { openDB, createTable } from './util/local';
+import LoadingOverlay from './components/UI/LoadingOverlay';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -153,7 +155,31 @@ function NotAuthenticated() {
 
 function Navigation() {
   const authCtx = useContext(AuthContext);
-  console.log(authCtx.isConnected);
+  //We need to init the DB only with mobile version.
+  const [dbInitialized, setDbInitialized] = useState(authCtx.device !== 'web' ? false : true);
+
+  useEffect(() => {
+    async function initDB() {
+      if (authCtx.device !== 'web') {
+        try {
+          await openDB();
+          await createTable();
+          setDbInitialized(true);
+        }
+        catch (error) {
+          console.log(error);
+        }
+      }
+    }
+
+    initDB();
+  }, []);
+
+  if (!dbInitialized) {
+    return (
+      <LoadingOverlay message="Abriendo base de datos local" />
+    );
+  }
 
   return (
     <NavigationContainer>
