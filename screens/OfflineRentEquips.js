@@ -5,20 +5,25 @@ import { RentEquipContext } from "../store/rent-equip-context";
 
 function OfflineRentEquips() {
   const rentEquipsCtx = useContext(RentEquipContext);
+  //const authCtx = useContext(AuthContext);
 
   //Used to fetch the equipments from the database
-  useEffect(() => {
-    if (rentEquipsCtx.rentEquips.length === 0) {
-      async function getEquips() {
-        await rentEquipsCtx.setRentEquips(true);
-      }
-      getEquips();
-    }
-  }, []);
+  //useEffect(() => {
+  //  async function getEquips() {
+  //    await rentEquipsCtx.setRentEquips();
+  //  }
+  //  getEquips();
+  //}, []);
 
   if (rentEquipsCtx.fetching) {
     return (
       <LoadingOverlay message="Cargando equipos" />
+    );
+  }
+
+  if (rentEquipsCtx.synchronizing) {
+    return (
+      <LoadingOverlay message="Sincronizando equipos" />
     );
   }
 

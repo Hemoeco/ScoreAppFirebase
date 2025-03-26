@@ -22,7 +22,7 @@ import VideoScreen from "../UI/expo-video";
 import VideoAv from "../UI/expo-av";
 import { AuthContext } from "../../store/auth-context";
 
-function FilePicker({ onChangeImage, imageUri, isEditing }) {
+function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
   const authCtx = useContext(AuthContext);
   const [pickedImage, setPickedImage] = useState(imageUri);
   const [isVideo, setIsVideo] = useState(imageUri?.includes('video'));
@@ -132,18 +132,37 @@ function FilePicker({ onChangeImage, imageUri, isEditing }) {
         {image}
       </View>
       <View style={styles.buttonContainer}>
-        {authCtx.device !== 'web' &&
-          (authCtx.isConnected || !authCtx.isConnected && !isEditing)
-          && (
-            <IconButton icon="camera" onPress={takeImageHandler} size={24} />
-          )}
-        {(authCtx.isConnected || !authCtx.isConnected && !isEditing) && (
-          <IconButton icon="image" onPress={selectImageHandler} size={24} />
-        )}
-        {!!pickedImage && (authCtx.isConnected || !authCtx.isConnected && !isEditing)
-          && (
-            <IconButton icon="remove-circle" onPress={deleteImageHandler} size={24} />
-          )}
+        {
+          /*
+            Show the button for the camera when is iOS or Android and:
+              -The user have internet.
+              -The user doesn't have internet but is creating a register.
+              -The user doesn't have internet but is editing a register and it's available offline.
+          */
+          authCtx.device !== 'web' &&
+          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
+          (<IconButton icon="camera" onPress={takeImageHandler} size={24} />)
+        }
+        {
+          /*
+            Show the button to pick a file from the gallery when:
+              -The user have internet.
+              -The user doesn't have internet but is creating a register.
+              -The user doesn't have internet but is editing a register and it's available offline.
+          */
+          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
+          (<IconButton icon="image" onPress={selectImageHandler} size={24} />)
+        }
+        {
+          /*
+            Show the button to remove the file when the user have previously selected a file and:
+              -Have internet.
+              -Doesn't have internet but is creating a register.
+              -Doesn't have internet but is editing a register and it's available offline.
+          */
+          !!pickedImage && (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
+          (<IconButton icon="remove-circle" onPress={deleteImageHandler} size={24} />)
+        }
       </View>
     </View>
   );

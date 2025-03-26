@@ -164,7 +164,7 @@ function Navigation() {
 
   useEffect(() => {
     async function initDB() {
-      if (authCtx.device !== 'web') {
+      //if (authCtx.device !== 'web') {
         try {
           await openDB();
           await createTable();
@@ -173,7 +173,7 @@ function Navigation() {
         catch (error) {
           console.log(error);
         }
-      }
+      //}
     }
 
     initDB();

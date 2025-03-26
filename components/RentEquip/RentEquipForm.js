@@ -16,25 +16,24 @@ function RentEquipForm({
   isEditing
 }) {
   const headerHeight = useHeaderHeight(); // Obtener la altura del header automáticamente
+  const isOffline = equipData ? equipData.disponibleOffline : false;
 
   //Context with the functions
   const rentEquipsCtx = useContext(RentEquipContext);
   const authCtx = useContext(AuthContext);
-
-  //Data of the equipment selected
-  //const imageEquipUri = equipData ? equipData.imagen : '';
-  //const rentEquipId = equipData ? equipData.id : '';
 
   //Used for set/update the equipment's data
   const [validName, setValidName] = useState(true);
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
   const [enteredDesc, setEnteredDesc] = useState(equipData ? equipData.descripcion : '');
   const [selectedImage, setSelectedImage] = useState(equipData ? equipData.imagen : '');
-  const [availableOffline, setAvailableOffline] = useState(equipData ? 
-                                                           equipData.disponibleOffline : 
-                                                           false);
+  const [availableOffline, setAvailableOffline] = useState(equipData ?
+    equipData.disponibleOffline :
+    !authCtx.isConnected);
   const [deleteImageUri, setDeleteImageUri] = useState('');
   const navigation = useNavigation();
+
+  //#region Methods
 
   //Set the value entered in the name input
   function onChangeName(name) {
@@ -69,6 +68,8 @@ function RentEquipForm({
     rentEquipsCtx.saveRentEquipData(isEditing, equipData?.id, equip, selectedImage, deleteImageUri);
   }
 
+  //#endregion Methods
+
   return (
     <KeyboardAvoidingView
       behavior={authCtx.device === "ios" ? "padding" : "height"}
@@ -82,6 +83,7 @@ function RentEquipForm({
             onChangeImage={onChangeImage}
             imageUri={selectedImage}
             isEditing={isEditing}
+            availableOffline={isOffline}
           />
           <Text style={[styles.label, !validName && styles.invalidLabel]}>
             Nombre
@@ -99,10 +101,10 @@ function RentEquipForm({
             value={enteredDesc}
           />
           <Text style={styles.label}>Disponible sin conexión</Text>
-          <Checkbox 
-            value={availableOffline} 
+          <Checkbox
+            value={availableOffline}
             onValueChange={setAvailableOffline}
-            disabled={!isEditing && !authCtx.isConnected}
+            disabled={!authCtx.isConnected} //Dissabled the checkbox when the user doesn't have internet.
           />
         </View>
         <View style={styles.buttonContainer}>
@@ -111,20 +113,22 @@ function RentEquipForm({
             size={24}
             onPress={navigation.goBack}
           />
-          {(authCtx.isConnected || !authCtx.isConnected && !isEditing) && (
+          {(authCtx.isConnected || (!authCtx.isConnected && (!isEditing || equipData.disponibleOffline))) && (
             <IconButton
               icon="save"
               size={24}
               onPress={onSave}
             />
           )}
-          {isEditing && authCtx.isConnected && (
-            <IconButton
-              onPress={rentEquipsCtx.deleteEquip.bind(this, equipData)}
-              icon="trash"
-              size={24}
-            />
-          )}
+          {//Just allow to delete the equip when the user is editing and: have internet or it's a equip which was created totally offline.
+            isEditing && (authCtx.isConnected || equipData.id.includes("offline")) && (
+              <IconButton
+                onPress={rentEquipsCtx.deleteEquip.bind(this, equipData)}
+                icon="trash"
+                size={24}
+              />
+            )
+          }
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -79,11 +79,10 @@ function RentEquipContextProvider({ children }) {
         In case we don't have connection, then just read the data from local DB.
       */
       const rentEquips = authCtx.isConnected ?
-        await getRentEquips() :
+        await getRentEquips(authCtx.isConnected) :
         await readLocalData('SELECT * FROM EquiposRenta');
 
       dispatch(({ type: 'SET', payload: rentEquips }));
-      //await setOfflineRentEquips(false);
     }
     catch (error) {
       console.log(error);
@@ -140,7 +139,7 @@ function RentEquipContextProvider({ children }) {
       }
 
       //Check for local actions.
-      //await localCRUD(rentEquipData);
+      await localCRUD(rentEquipData);
 
       navigation.goBack();
     } catch (error) {
@@ -153,22 +152,23 @@ function RentEquipContextProvider({ children }) {
 
   async function deleteEquip(rentEquip) {
     setIsSubmitting(true);
-
     try {
-      //Only when the device has connection we will use the methods for Firebase.
-      if (authCtx.isConnected) {
+      
+      //Only when the device has connection and it's id doesn't containt "offline" we will use the methods for Firebase.
+      if (authCtx.isConnected && !rentEquip.id.includes('offline')) {
         //If the equipment has a file, then delete it first.
         if (rentEquip.imagen) {
           await deleteImage(rentEquip.imagen);
         }
 
         await deleteRentEquip(rentEquip.id);
-        dispatch({ type: 'DELETE', payload: rentEquip.id });
       }
-
+      
+      dispatch({ type: 'DELETE', payload: rentEquip.id });
+      
       //Check for local actions.
-      //await localCRUD(rentEquip, true);
-
+      await localCRUD(rentEquip, true);
+      
       navigation.goBack();
     } catch (error) {
       console.log(error);
@@ -180,24 +180,6 @@ function RentEquipContextProvider({ children }) {
   //#endregion FirebaseDB
 
   //#region LocalDB
-  async function setOfflineRentEquips(setFeching) {
-    if (setFeching) {
-      setIsFetching(true);
-    }
-
-    try {
-      const offlineRentEquips = await readLocalData('SELECT * FROM EquiposRenta');
-      offlineDispatch(({ type: 'SET', payload: offlineRentEquips }));
-    }
-    catch (error) {
-      console.log(error);
-    }
-
-    if (setFeching) {
-      setIsFetching(false);
-    }
-  }
-
   /**
    * Used to determine if we need to create, update or delete local data.
    * @param {*} rentEquip 
@@ -213,17 +195,23 @@ function RentEquipContextProvider({ children }) {
     if (!equipExists && rentEquip.disponibleOffline) {
       await saveLocalData(rentEquip);
     }
-    //UPDATE
-    else if (equipExists && rentEquip.disponibleOffline) {
-      await updateLocalData(rentEquip);
-    }
     //DELETE
     else if ((equipExists && !rentEquip.disponibleOffline)
       || (isDeleting && equipExists && rentEquip.disponibleOffline)) {
+    console.log(rentEquip.id)
       await deleteLocalData(rentEquip.id);
+    }
+    //UPDATE
+    else if (equipExists && rentEquip.disponibleOffline) {
+      await updateLocalData(rentEquip, rentEquip.id);
     }
   }
   //#endregion LocalDB
+
+  async function syncHandler() {
+    await syncData();
+    await setRentEquips('set');
+  }
 
   async function syncData() {
     setIsSynchronizing(true);
@@ -236,12 +224,9 @@ function RentEquipContextProvider({ children }) {
       const equips = rentEquipsState.filter(
         (equip) => equip.actualizadoOffline || equip.id.includes('offline')
       );
-
+      
       //For each equip make the updates.
-      for (const equip in equips) {
-        //Update the field "actualizadoOffline" (it should be false).
-        equip.__updatedOffline(!authCtx.isConnected);
-
+      for (const equip of equips) {
         /*
           Check for the image first. If the url isn't empty and doesn't contains 
           "firebasestorage" it means it was changed it, so we need to upload the new one.
@@ -252,28 +237,33 @@ function RentEquipContextProvider({ children }) {
         }
 
         /*
-          Copy the data to another object and delete the id property of the copy.
-          This is done because we doesn't send the id when update or create a register in Firebase and
-          if we remove it from the original object, would be necessary to added it again later
+          Copy the id to another variable and delete the properties: id and "actualizadoOffline".
+          This is done because we doesn't send the id nor "actualizadoOffline" when update or create 
+          a register in Firebase.
         */
-        const copyEquip = equip;
-        delete copyEquip.id;
+        const equipId = equip.id;
+        delete equip.id;
+        delete equip.actualizadoOffline;
 
         /*
           Check if is necessary to update or create the register in Firebase.
           We can know it with the id stored locally, if contains "offline" then
           is a equip that was created without connection.
         */
-        if (equip.id.includes('offline')) {
-          const id = await saveRentEquip(copyEquip, authCtx.isConnected);
+        if (equipId.includes('offline')) {
+          const id = await saveRentEquip(equip, authCtx.isConnected);
           equip.__setId(id);
         }
         else {
-          await updateRentEquip(id, equip, authCtx.isConnected);
+          await updateRentEquip(equipId, equip, authCtx.isConnected);
+          equip.__setId(equipId);
         }
 
+        //Update the field "actualizadoOffline" (it should be false).
+        equip.actualizadoOffline = !authCtx.isConnected;
+
         //Finally, update the data locally.
-        await updateLocalData(equip);
+        await updateLocalData(equip, equipId);
       }
     }
     catch (error) {
@@ -296,7 +286,7 @@ function RentEquipContextProvider({ children }) {
     setRentEquips: setRentEquips,
     saveRentEquipData: saveRentEquipData,
     deleteEquip: deleteEquip,
-    syncData: syncData,
+    syncData: syncHandler,
     errorHandler: errorHandler
   };
 

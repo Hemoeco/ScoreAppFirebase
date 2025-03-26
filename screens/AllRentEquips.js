@@ -6,27 +6,32 @@ import { AuthContext } from "../store/auth-context";
 
 function AllRentEquips() {
   const rentEquipsCtx = useContext(RentEquipContext);
-  const authCtx = useContext(AuthContext);
-  
+  //const authCtx = useContext(AuthContext);
+
   //Used to fetch the equipments from the database
   useEffect(() => {
     async function getEquips() {
       await rentEquipsCtx.setRentEquips('set');
     }
-    
+
     getEquips();
   }, []);
-  
+
   if (rentEquipsCtx.fetching) {
     return (
       <LoadingOverlay message="Cargando equipos" />
     );
   }
 
+  if (rentEquipsCtx.synchronizing) {
+    return (
+      <LoadingOverlay message="Sincronizando equipos" />
+    );
+  }
+
   return (
-    <RentEquipList 
-      rentEquips={rentEquipsCtx.rentEquips} 
-      getRentEquips={rentEquipsCtx.setRentEquips}
+    <RentEquipList
+      rentEquips={rentEquipsCtx.rentEquips}
     />
   );
 }

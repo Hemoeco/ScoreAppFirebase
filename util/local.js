@@ -1,10 +1,11 @@
-//import * as SQLite from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite';
 import { RentEquip } from "../models/rentEquip";
 
 let db; //= SQLite.openDatabaseSync('score.db');
 
-export async function openDB(){
+export async function openDB() {
   db = await SQLite.openDatabaseAsync('score.db');
+  console.log(db)
 }
 
 export async function closeDB() {
@@ -23,7 +24,7 @@ export async function createTable() {
       -VARCHAR(n) type existe in SQLite but it ignores the max lenght defined. In this case is
        better to use TEXT.
   */
-  const create = await db.execAsync(`
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS EquiposRenta (
       idLocal INTEGER PRIMARY KEY NOT NULL, 
       idFirebase TEXT NULL,
@@ -43,11 +44,10 @@ export async function createTable() {
 export async function readLocalData(query) {
   const equipments = [];
   const allRegisters = await db.getAllAsync(query);
-
   for (const equip of allRegisters) {
-    let equipObj = new RentEquip(equip.nombre, equip.descripcion, 
-                                 equip.imagen, !!equip.disponibleOffline);
-    equipObj.__setId(equip.id);
+    let equipObj = new RentEquip(equip.nombre, equip.descripcion,
+      equip.imagen, !!equip.disponibleOffline);
+    equipObj.__setId(equip.idFirebase);
     equipObj.__updatedOffline(!!equip.actualizadoOffline);
 
     equipments.push(equipObj);
@@ -56,7 +56,7 @@ export async function readLocalData(query) {
   return equipments;
 }
 
-export async function saveLocalData(equip, connection) {
+export async function saveLocalData(equip) {
   await db.runAsync(
     `INSERT INTO EquiposRenta (
       idFirebase,
@@ -65,9 +65,9 @@ export async function saveLocalData(equip, connection) {
       imagen,
       disponibleOffline,
       actualizadoOffline
-    ) VALUES (?, ?, ?, ?, ?, ?)`, 
-    equip.id, 
-    equip.nombre, 
+    ) VALUES (?, ?, ?, ?, ?, ?)`,
+    equip.id,
+    equip.nombre,
     equip.descripcion,
     equip.imagen,
     Number(equip.disponibleOffline),
@@ -75,28 +75,31 @@ export async function saveLocalData(equip, connection) {
   );
 }
 
-export async function updateLocalData(equip) {
+export async function updateLocalData(equip, id) {
   await db.runAsync(
     `UPDATE EquiposRenta SET
+      idFirebase = ?,
       nombre = ?,
       descripcion = ?,
       imagen = ?,
       disponibleOffline = ?,
       actualizadoOffline = ?
-    WHERE idFirebase = ?`, 
-    equip.nombre, 
+    WHERE idFirebase = ?`,
+    equip.id,
+    equip.nombre,
     equip.descripcion,
     equip.imagen,
     Number(equip.disponibleOffline),
     Number(equip.actualizadoOffline),
-    equip.id
+    id
   );
 }
 
 export async function deleteLocalData(id) {
-  await db.runAsync(`
+  const x = await db.runAsync(`
     DELETE FROM EquiposRenta 
     WHERE idFirebase = ?`, id
   );
+
 }
 

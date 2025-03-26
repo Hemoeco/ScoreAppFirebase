@@ -3,7 +3,7 @@ import uuid from 'react-native-uuid';
 
 import { RentEquip } from "../models/rentEquip";
 import { rtDatabase } from "../firebase/FirebaseConfig";
-import { readLocalData, saveLocalData } from "./local";
+import { readLocalData, saveLocalData, updateLocalData } from "./local";
 
 //const BACKEND_URL = 'https://score-test-4e44a-default-rtdb.firebaseio.com';
 const TABLE_NAME = 'EquiposRenta'
@@ -15,9 +15,9 @@ const TABLE_NAME = 'EquiposRenta'
 export async function getRentEquips(connection) {
   const equipments = [];
   //Get the local equipments which data hasn't been updated whithout connection.
-  //const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
+  const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
   //Get the local equipments which data has been updated whithout connection. 
-  //const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
+  const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
   //Get the equipments from Firebase.
   const reference = ref(rtDatabase, TABLE_NAME);
   const response = await get(reference);
@@ -34,30 +34,31 @@ export async function getRentEquips(connection) {
       Add the equipments from Firebase that hasn't been updated without connection.
       This is done because we don't want to lose the data locally saved.
     */
-    //if (!localUpdated.find(equip => equip.idFirebase === key)) {
-    const equip = response.child(key).val();
-    const equipObj = new RentEquip(equip.nombre, equip.descripcion,
-      equip.imagen, equip.disponibleOffline);
+    if (!localUpdated.find(equip => equip.id === key)) {
+      const equip = response.child(key).val();
+      const equipObj = new RentEquip(equip.nombre, equip.descripcion,
+        equip.imagen, equip.disponibleOffline);
 
-    equipObj.__setId(key);
+      equipObj.__setId(key);
 
-    //await updateLocalData(equipObj, connection, localEquipments);
+      await updateLocal(equipObj, connection, localEquipments);
 
-    equipments.push(equipObj);
-    //}
+      equipments.push(equipObj);
+    }
   }
 
-  return equipments;
+
+  return [...equipments, ...localUpdated];
 }
 
 /**
  * Used to known if is necessary to create or update the local data.
  * @param {*} equip 
 */
-async function updateLocalData(equip, connection, localEquipments) {
+async function updateLocal(equip, connection, localEquipments) {
   //Check if the equip must be in the local DB.
   if (equip.disponibleOffline) {
-    equip.__setUpdatedOffline(!connection);
+    equip.__updatedOffline(!connection);
 
     //If already in DB, then update the info (UPDATE).
     if (localEquipments.find(e => e.idFirebase === equip.id)) {
