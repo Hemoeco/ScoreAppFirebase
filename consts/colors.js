@@ -11,4 +11,5 @@ export const Colors = {
   accent400: '#f1cd14ab',
   accent500: '#E4CC27',
   gray700: '#221c30',
+  gray600: '#ac1501'
 };

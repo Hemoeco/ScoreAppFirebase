@@ -22,15 +22,17 @@ function RentEquipForm({
   const authCtx = useContext(AuthContext);
 
   //Data of the equipment selected
-  const imageEquipUri = equipData ? equipData.imagen : '';
-  const rentEquipId = equipData ? equipData.id : '';
+  //const imageEquipUri = equipData ? equipData.imagen : '';
+  //const rentEquipId = equipData ? equipData.id : '';
 
   //Used for set/update the equipment's data
   const [validName, setValidName] = useState(true);
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
   const [enteredDesc, setEnteredDesc] = useState(equipData ? equipData.descripcion : '');
   const [selectedImage, setSelectedImage] = useState(equipData ? equipData.imagen : '');
-  const [availableOffline, setAvailableOffline] = useState(equipData ? equipData.offline : false);
+  const [availableOffline, setAvailableOffline] = useState(equipData ? 
+                                                           equipData.disponibleOffline : 
+                                                           false);
   const [deleteImageUri, setDeleteImageUri] = useState('');
   const navigation = useNavigation();
 
@@ -97,7 +99,11 @@ function RentEquipForm({
             value={enteredDesc}
           />
           <Text style={styles.label}>Disponible sin conexión</Text>
-          <Checkbox value={availableOffline} onValueChange={setAvailableOffline} />
+          <Checkbox 
+            value={availableOffline} 
+            onValueChange={setAvailableOffline}
+            disabled={!isEditing && !authCtx.isConnected}
+          />
         </View>
         <View style={styles.buttonContainer}>
           <IconButton

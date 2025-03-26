@@ -1,4 +1,4 @@
-import * as SQLite from 'expo-sqlite';
+//import * as SQLite from 'expo-sqlite';
 import { RentEquip } from "../models/rentEquip";
 
 let db; //= SQLite.openDatabaseSync('score.db');

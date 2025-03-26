@@ -2,10 +2,12 @@ import { useContext, useEffect } from "react";
 import RentEquipList from "../components/RentEquip/RentEquipList";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import { RentEquipContext } from "../store/rent-equip-context";
+import { AuthContext } from "../store/auth-context";
 
 function AllRentEquips() {
   const rentEquipsCtx = useContext(RentEquipContext);
-
+  const authCtx = useContext(AuthContext);
+  
   //Used to fetch the equipments from the database
   useEffect(() => {
     async function getEquips() {
@@ -14,7 +16,7 @@ function AllRentEquips() {
     
     getEquips();
   }, []);
-
+  
   if (rentEquipsCtx.fetching) {
     return (
       <LoadingOverlay message="Cargando equipos" />

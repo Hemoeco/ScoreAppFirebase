@@ -36,6 +36,12 @@ function RentEquipList({ rentEquips, getRentEquips, local }) {
     );
   }
 
+  if (local && rentEquips.find(
+    (equip) => equip.disponibleOffline && equip.actualizadoOffline)
+  ) {
+
+  }
+
   return (
     <FlatList
       style={styles.list}

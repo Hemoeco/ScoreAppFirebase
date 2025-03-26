@@ -20,6 +20,7 @@ import AllRentEquips from './screens/AllRentEquips';
 import ManageRentEquips from './screens/ManageRentEquips';
 import { openDB, createTable } from './util/local';
 import LoadingOverlay from './components/UI/LoadingOverlay';
+import OfflineRentEquips from './screens/OfflineRentEquips';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -37,11 +38,11 @@ function CustomDrawerContent(props) {
       <DrawerItem
         label="Cerrar sesión"
         labelStyle={{
-          color: 'black',
+          color: Colors.gray600,
           fontSize: 15
         }}
         icon={() => (
-          <Ionicons name="log-out-outline" size={25} />
+          <Ionicons name="log-out-outline" size={25} color={Colors.gray600}/>
         )}
         onPress={() => authCtx.logout()}
       />
@@ -81,6 +82,24 @@ function DrawerNavigator() {
           )
         })}
       />
+      <Drawer.Screen
+        name="OfflineRentEquips"
+        component={OfflineRentEquips}
+        options={({ navigation }) => ({
+          title: 'Disponible sin conexión',
+          headerRight: ({ tintColor }) => (
+            <IconButton
+              icon="add"
+              size={24}
+              color={tintColor}
+              onPress={() => navigation.navigate('ManageRentEquips')}
+            />
+          ),
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="cloud-offline" color={color} size={size} />
+          )
+        })}
+      />
     </Drawer.Navigator>
   );
 }
@@ -103,21 +122,6 @@ function Authenticated() {
             headerShown: false
           }}
         />}
-        {/*<Stack.Screen
-          name="AllRentEquips"
-          component={AllRentEquips}
-          options={({ navigation }) => ({
-            title: 'Equipos renta',
-            headerRight: ({ tintColor }) => (
-              <IconButton
-                icon="add"
-                size={24}
-                color={tintColor}
-                onPress={() => navigation.navigate('ManageRentEquips')}
-              />
-            )
-          })}
-        />*/}
         <Stack.Screen
           name="ManageRentEquips"
           component={ManageRentEquips}
@@ -175,9 +179,9 @@ function Navigation() {
     initDB();
   }, []);
 
-  if (!dbInitialized) {
+  if (!dbInitialized || authCtx.isConnected === null) {
     return (
-      <LoadingOverlay message="Abriendo base de datos local" />
+      <LoadingOverlay message="Configurando entorno" />
     );
   }
 

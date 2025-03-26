@@ -15,9 +15,9 @@ const TABLE_NAME = 'EquiposRenta'
 export async function getRentEquips(connection) {
   const equipments = [];
   //Get the local equipments which data hasn't been updated whithout connection.
-  const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
+  //const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
   //Get the local equipments which data has been updated whithout connection. 
-  const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
+  //const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
   //Get the equipments from Firebase.
   const reference = ref(rtDatabase, TABLE_NAME);
   const response = await get(reference);
@@ -34,17 +34,17 @@ export async function getRentEquips(connection) {
       Add the equipments from Firebase that hasn't been updated without connection.
       This is done because we don't want to lose the data locally saved.
     */
-    if (!localUpdated.find(equip => equip.idFirebase === key)) {
-      const equip = response.child(key).val();
-      const equipObj = new RentEquip(equip.nombre, equip.descripcion,
-                                     equip.imagen, equip.disponibleOffline);
-      
-      equipObj.__setId(key);
-      
-      await updateLocalData(equipObj, connection, localEquipments);
-      
-      equipments.push(equipObj);
-    }
+    //if (!localUpdated.find(equip => equip.idFirebase === key)) {
+    const equip = response.child(key).val();
+    const equipObj = new RentEquip(equip.nombre, equip.descripcion,
+      equip.imagen, equip.disponibleOffline);
+
+    equipObj.__setId(key);
+
+    //await updateLocalData(equipObj, connection, localEquipments);
+
+    equipments.push(equipObj);
+    //}
   }
 
   return equipments;
@@ -56,11 +56,11 @@ export async function getRentEquips(connection) {
 */
 async function updateLocalData(equip, connection, localEquipments) {
   //Check if the equip must be in the local DB.
-  if(equip.disponibleOffline) {
+  if (equip.disponibleOffline) {
     equip.__setUpdatedOffline(!connection);
-    
+
     //If already in DB, then update the info (UPDATE).
-    if(localEquipments.find(e => e.idFirebase === equip.id)){
+    if (localEquipments.find(e => e.idFirebase === equip.id)) {
       await updateLocalData(equip);
     }
     //In case it isn't in the local DB, then add it (CREATE).
@@ -70,24 +70,38 @@ async function updateLocalData(equip, connection, localEquipments) {
   }
 }
 
-export async function saveRentEquip(equipRentData) {
-  let id = uuid.v4();
+/**
+ * Create a new register in Firebase. If the user doesn't have connection then
+ * returns a temporary id.
+ * @param {*} equipRentData 
+ * @param {*} connection 
+ * @returns 
+*/
+export async function saveRentEquip(equipRentData, connection) {
+  let id;
 
-  //Create the reference to the table.
-  const reference = ref(rtDatabase, TABLE_NAME);
-  //Generates a new id.
-  const newEquip = push(reference);
-  //Upload the new equipment.
-  await set(newEquip, equipRentData);
+  if (connection) {
+    //Create the reference to the table.
+    const reference = ref(rtDatabase, TABLE_NAME);
+    //Generates a new id.
+    const newEquip = push(reference);
+    //Upload the new equipment.
+    await set(newEquip, equipRentData);
 
-  id = newEquip.key; //Saves the new id only if the upload was correct.
+    id = newEquip.key; //Saves the new id only if the upload was correct.
+  }
+  else {
+    id = `offline-${uuid.v4()}`;
+  }
 
   return id;
 }
 
-export async function updateRentEquip(id, equipmentData) {
-  const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
-  await update(reference, equipmentData);
+export async function updateRentEquip(id, equipmentData, connection) {
+  if (connection) {
+    const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
+    await update(reference, equipmentData);
+  }
 }
 
 export async function deleteRentEquip(id) {
