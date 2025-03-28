@@ -24,6 +24,8 @@ export async function createTable() {
       -VARCHAR(n) type existe in SQLite but it ignores the max lenght defined. In this case is
        better to use TEXT.
   */
+
+  //await db.execAsync('Drop Table EquiposRenta');
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS EquiposRenta (
       idLocal INTEGER PRIMARY KEY NOT NULL, 
@@ -44,6 +46,7 @@ export async function createTable() {
 export async function readLocalData(query) {
   const equipments = [];
   const allRegisters = await db.getAllAsync(query);
+  
   for (const equip of allRegisters) {
     let equipObj = new RentEquip(equip.nombre, equip.descripcion,
       equip.imagen, !!equip.disponibleOffline);

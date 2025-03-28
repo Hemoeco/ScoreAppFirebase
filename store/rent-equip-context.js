@@ -78,11 +78,14 @@ function RentEquipContextProvider({ children }) {
         First, we get the data from Firebase (in this method we will update the local DB too).
         In case we don't have connection, then just read the data from local DB.
       */
-      const rentEquips = authCtx.isConnected ?
-        await getRentEquips(authCtx.isConnected) :
-        await readLocalData('SELECT * FROM EquiposRenta');
 
+      const rentEquips = 
+      authCtx.isConnected ?
+      await getRentEquips(authCtx.isConnected) :
+      await readLocalData('SELECT * FROM EquiposRenta');
+      
       dispatch(({ type: 'SET', payload: rentEquips }));
+      //console.log(rentEquips);
     }
     catch (error) {
       console.log(error);
@@ -198,7 +201,6 @@ function RentEquipContextProvider({ children }) {
     //DELETE
     else if ((equipExists && !rentEquip.disponibleOffline)
       || (isDeleting && equipExists && rentEquip.disponibleOffline)) {
-    console.log(rentEquip.id)
       await deleteLocalData(rentEquip.id);
     }
     //UPDATE

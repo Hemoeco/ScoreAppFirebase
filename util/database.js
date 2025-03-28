@@ -59,9 +59,9 @@ async function updateLocal(equip, connection, localEquipments) {
   //Check if the equip must be in the local DB.
   if (equip.disponibleOffline) {
     equip.__updatedOffline(!connection);
-
+    
     //If already in DB, then update the info (UPDATE).
-    if (localEquipments.find(e => e.idFirebase === equip.id)) {
+    if (localEquipments.find(e => e.id === equip.id)) {
       await updateLocalData(equip);
     }
     //In case it isn't in the local DB, then add it (CREATE).
