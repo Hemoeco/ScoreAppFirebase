@@ -3,7 +3,7 @@
   maps in this example app),
 */
 
-import { Alert, Image, StyleSheet, View, Text, Platform } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 /*
   "launchCameraAsync" will launch the device camera and wait for us to take an image.
   "useCameraPermissions" to control the permissions by ourselfs, mostly for iOS this is needed.
@@ -15,17 +15,23 @@ import {
   PermissionStatus,
   useCameraPermissions
 } from "expo-image-picker";
-import { useContext, useState } from "react";
-import { Colors } from "../../consts/colors";
+import {memo, useContext, useState } from "react";
 import IconButton from "../UI/IconButton";
-import VideoScreen from "../UI/expo-video";
-import VideoAv from "../UI/expo-av";
 import { AuthContext } from "../../store/auth-context";
+import Slideshow from "../UI/Slideshow";
+import LoadingOverlay from '../UI/LoadingOverlay';
 
-function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
+function FilesPicker({
+  onSelectedFiles,
+  onDeletedFiles,
+  files,
+  isEditing,
+  availableOffline
+}) {
+  console.log(files);
   const authCtx = useContext(AuthContext);
-  const [pickedImage, setPickedImage] = useState(imageUri);
-  const [isVideo, setIsVideo] = useState(imageUri?.includes('video'));
+  //To know if the files are loading
+  const [isLoading, setIsLoading] = useState(false);
   //Permissions for access the camera
   const [cameraPermissionInformation, requestPermission] = useCameraPermissions();
   //It's needed another for the gallery, but I will do this later.
@@ -58,7 +64,7 @@ function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
     return true;
   }
 
-  //To take an image with the camera
+  //To take an image with the camera.
   async function takeImageHandler() {
     const hasPermission = await verifyPermissions('camera');
 
@@ -75,62 +81,53 @@ function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
     //Need access to "assets"
     if (!image.canceled) {
       let uri = image.assets[0].uri;
-      onChangeImage(uri,
-        pickedImage.includes('firebasestorage') ? pickedImage : ''
-      );
-      setPickedImage(uri);
+      onSelectedFiles((curFiles) => [...curFiles, uri]);
     }
   }
 
-  //To select an image from gallery
+  //To select an image from gallery.
   async function selectImageHandler() {
-    const image = await launchImageLibraryAsync({
+    setIsLoading(true);
+    const files = await launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       //allowsEditing: true,
       //aspect: [4, 9],
+      allowsMultipleSelection: true,
       quality: 0.6,
     });
+    setIsLoading(false);
 
-    if (!image.canceled) {
-      let uri = image.assets[0].uri;
-      onChangeImage(uri,
-        pickedImage.includes('firebasestorage') ? pickedImage : ''
-      );
-      setPickedImage(uri);
-      setIsVideo(image.assets[0].type.includes('video'));
+    if (!files.canceled) {
+      const uris = Object.values(files.assets).map(file => file.uri);
+      onSelectedFiles((curFiles) => [...uris, ...curFiles]);
     }
   }
 
-  //To delete the image
-  function deleteImageHandler() {
-    onChangeImage('',
-      pickedImage.includes('firebasestorage') ? pickedImage : ''
-    );
-    setPickedImage('');
-    setIsVideo(false);
+  //To remove the uri of the file.
+  function removeImageHandler(uri) {
+    /*
+      When the file is already in Firebase, we added to another array to know that we
+      need to deleted from the DB too.
+    */
+    if (uri.includes('firebasestorage')) {
+      onDeletedFiles((curFiles) => [...curFiles, uri]);
+    }
+    //Remove the uri from the current selected files always.
+    onSelectedFiles((curFiles) => curFiles.filter(file => file !== uri));
   }
 
-  let image = <Text>Sin imagen seleccionada.</Text>;
-
-  if (pickedImage) {
-    if (isVideo) {
-      if (authCtx.device == 'web') {
-        image = <VideoAv uri={pickedImage} style={styles.image} />
-      }
-      else {
-        image = <VideoScreen uri={pickedImage} style={styles.image} />
-      }
-    }
-    else {
-      image = <Image style={styles.image} source={{ uri: pickedImage }} />;
-    }
+  if (isLoading) {
+    return <LoadingOverlay message="Cargando archivos multimedia" />;
   }
 
   return (
-    <View style={{ flexDirection: 'row' }}>
-      <View style={styles.imagePreview}>
-        {image}
-      </View>
+    <View>
+      <Slideshow
+        files={files}
+        removeImageHandler={removeImageHandler}
+        isEditing={isEditing}
+        availableOffline={availableOffline}
+      />
       <View style={styles.buttonContainer}>
         {
           /*
@@ -140,7 +137,7 @@ function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
               -The user doesn't have internet but is editing a register and it's available offline.
           */
           authCtx.device !== 'web' &&
-          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
+          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) &&
           (<IconButton icon="camera" onPress={takeImageHandler} size={24} />)
         }
         {
@@ -150,48 +147,21 @@ function FilePicker({ onChangeImage, imageUri, isEditing, availableOffline }) {
               -The user doesn't have internet but is creating a register.
               -The user doesn't have internet but is editing a register and it's available offline.
           */
-          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
+          (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) &&
           (<IconButton icon="image" onPress={selectImageHandler} size={24} />)
-        }
-        {
-          /*
-            Show the button to remove the file when the user have previously selected a file and:
-              -Have internet.
-              -Doesn't have internet but is creating a register.
-              -Doesn't have internet but is editing a register and it's available offline.
-          */
-          !!pickedImage && (authCtx.isConnected || (!authCtx.isConnected && (!isEditing || availableOffline))) && 
-          (<IconButton icon="remove-circle" onPress={deleteImageHandler} size={24} />)
         }
       </View>
     </View>
   );
 }
 
-export default FilePicker;
+export default memo(FilesPicker);
 
 const styles = StyleSheet.create({
-  imagePreview: {
-    width: '83%',
-    height: 275,
-    marginVertical: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.accent400,
-    backgroundColor: Colors.accent300,
-    borderRadius: 4,
-    overflow: 'hidden'
-  },
   buttonContainer: {
-    //flexDirection: 'row',
+    flexDirection: 'row',
     //justifyContent: 'space-around',
     justifyContent: 'center',
     alignItems: 'center'
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    //borderRadius: 4
   }
 });

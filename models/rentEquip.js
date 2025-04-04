@@ -1,8 +1,8 @@
 export class RentEquip {
-  constructor(nombre, descripcion = '', imagen = '', disponibleOffline = false) {
+  constructor(nombre, descripcion = '', multimedia = [], disponibleOffline = false) {
     this.nombre = nombre;
     this.descripcion = descripcion;
-    this.imagen = imagen;
+    this.multimedia = multimedia;
     this.disponibleOffline = disponibleOffline;
   }
 

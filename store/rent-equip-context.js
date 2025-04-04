@@ -1,7 +1,6 @@
 import { createContext, useContext, useReducer, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "./auth-context";
-import uuid from 'react-native-uuid';
 
 import {
   getRentEquips,
@@ -79,11 +78,11 @@ function RentEquipContextProvider({ children }) {
         In case we don't have connection, then just read the data from local DB.
       */
 
-      const rentEquips = 
-      authCtx.isConnected ?
-      await getRentEquips(authCtx.isConnected) :
-      await readLocalData('SELECT * FROM EquiposRenta');
-      
+      const rentEquips =
+        authCtx.isConnected ?
+          await getRentEquips(authCtx.isConnected) :
+          await readLocalData('SELECT * FROM EquiposRenta');
+
       dispatch(({ type: 'SET', payload: rentEquips }));
       //console.log(rentEquips);
     }
@@ -98,21 +97,41 @@ function RentEquipContextProvider({ children }) {
 
   //Saves the data of the equip, could be add or update.
   async function saveRentEquipData(isEditing, rentEquipId, rentEquipData,
-    selectedImage, deleteImageUri) {
+    selectedFiles, deletedFiles) {
     setIsSubmitting(true);
 
     try {
       //Only when the device has connection we will use the methods for Firebase.
       if (authCtx.isConnected) {
-        //If we change or remove the file, and it was already in Firebase, then we delete that file first.
-        if (deleteImageUri) {
-          await deleteImage(deleteImageUri);
+        /*
+          If we change or remove files that were already in Firebase, then we need to delete 
+          those files first.
+        */
+        if (deletedFiles && deletedFiles.length > 0) {
+          for (const uri of deletedFiles) {
+            await deleteImage(uri);
+          }
         }
 
-        //If the user selected a file and it isn't yet in Firebase, then we upload it.
-        if (selectedImage && !selectedImage.includes('firebasestorage')) {
-          const imageUrl = await uploadImage(selectedImage);
-          rentEquipData.imagen = imageUrl;
+        /*
+          If the user selected files and they aren't in Firebase yed, then we upload them.
+        */
+        if (selectedFiles && selectedFiles.find((uri) => !uri.includes('firebasestorage'))) {
+          //Get the files that are already in Firebase.
+          const firebaseFiles = selectedFiles.filter((uri) => uri.includes('firebasestorage'));
+          //Get the files that aren't in Firebase.
+          const localFiles = selectedFiles.filter((uri) => !uri.includes('firebasestorage'));
+          //New array to add the new files uploaded in Firebase.
+          const newUploadedFiles = [];
+
+          for (const uri of localFiles) {
+            const imageUri = await uploadImage(uri);
+            newUploadedFiles.push(imageUri);
+            //rentEquipData.imagen = imageUri;
+          }
+
+          //Set the multimedia of the equipment combining the arrays.
+          rentEquipData.multimedia = [...firebaseFiles, ...newUploadedFiles];
         }
       }
 
@@ -120,9 +139,13 @@ function RentEquipContextProvider({ children }) {
         "rentEquipData" doesn't have the id because it contains the info for Firebase and the id isn't necessary there
         because it's created automatically. Instead, we recieve as parameter "rentEquipId" which will be distinct of
         undefined when editing.
+
+        Also, we need to pass a new object for the equipment because before send it to Firebase it's necessary
+        to change the "multimedia" from an array to an object. When this change in the method for update or save,
+        "rentEquipData" also change here at least we pass a new object.
       */
       if (isEditing) {
-        await updateRentEquip(rentEquipId, rentEquipData, authCtx.isConnected);
+        await updateRentEquip(rentEquipId, { ...rentEquipData }, authCtx.isConnected);
         rentEquipData.__setId(rentEquipId);
         /*
           Depending of the connection's status we will known if the data was created/updated 
@@ -135,14 +158,15 @@ function RentEquipContextProvider({ children }) {
         rentEquipData.__updatedOffline(!authCtx.isConnected);
         dispatch({ type: 'UPDATE', payload: { id: rentEquipId, equip: rentEquipData } });
       } else {
-        const equipId = await saveRentEquip(rentEquipData, authCtx.isConnected);
+        const equipId = await saveRentEquip({ ...rentEquipData }, authCtx.isConnected);
         rentEquipData.__setId(equipId);
         rentEquipData.__updatedOffline(!authCtx.isConnected);
         dispatch({ type: 'ADD', payload: rentEquipData });
       }
 
+      //Comment this for now...
       //Check for local actions.
-      await localCRUD(rentEquipData);
+      //await localCRUD(rentEquipData);
 
       navigation.goBack();
     } catch (error) {
@@ -156,22 +180,24 @@ function RentEquipContextProvider({ children }) {
   async function deleteEquip(rentEquip) {
     setIsSubmitting(true);
     try {
-      
       //Only when the device has connection and it's id doesn't containt "offline" we will use the methods for Firebase.
       if (authCtx.isConnected && !rentEquip.id.includes('offline')) {
         //If the equipment has a file, then delete it first.
-        if (rentEquip.imagen) {
-          await deleteImage(rentEquip.imagen);
+        if (rentEquip.multimedia && rentEquip.multimedia.length > 0) {
+          for (const uri of rentEquip.multimedia) {
+            await deleteImage(uri);
+          }
         }
 
         await deleteRentEquip(rentEquip.id);
       }
-      
+
       dispatch({ type: 'DELETE', payload: rentEquip.id });
-      
+
+      //Comment this for now
       //Check for local actions.
-      await localCRUD(rentEquip, true);
-      
+      //await localCRUD(rentEquip, true);
+
       navigation.goBack();
     } catch (error) {
       console.log(error);
@@ -226,7 +252,7 @@ function RentEquipContextProvider({ children }) {
       const equips = rentEquipsState.filter(
         (equip) => equip.actualizadoOffline || equip.id.includes('offline')
       );
-      
+
       //For each equip make the updates.
       for (const equip of equips) {
         /*

@@ -15,9 +15,9 @@ const TABLE_NAME = 'EquiposRenta'
 export async function getRentEquips(connection) {
   const equipments = [];
   //Get the local equipments which data hasn't been updated whithout connection.
-  const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
+  //const localEquipments = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 0');
   //Get the local equipments which data has been updated whithout connection. 
-  const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
+  //const localUpdated = await readLocalData('SELECT * FROM EquiposRenta WHERE actualizadoOffline = 1');
   //Get the equipments from Firebase.
   const reference = ref(rtDatabase, TABLE_NAME);
   const response = await get(reference);
@@ -34,21 +34,23 @@ export async function getRentEquips(connection) {
       Add the equipments from Firebase that hasn't been updated without connection.
       This is done because we don't want to lose the data locally saved.
     */
-    if (!localUpdated.find(equip => equip.id === key)) {
+    //if (!localUpdated.find(equip => equip.id === key)) {
       const equip = response.child(key).val();
+      
       const equipObj = new RentEquip(equip.nombre, equip.descripcion,
-        equip.imagen, equip.disponibleOffline);
-
+        equip.multimedia, equip.disponibleOffline);
+        
       equipObj.__setId(key);
 
-      await updateLocal(equipObj, connection, localEquipments);
+      //await updateLocal(equipObj, connection, localEquipments);
 
       equipments.push(equipObj);
-    }
+    //}
   }
 
+  return equipments;
 
-  return [...equipments, ...localUpdated];
+  //return [...equipments, ...localUpdated];
 }
 
 /**
@@ -87,6 +89,8 @@ export async function saveRentEquip(equipRentData, connection) {
     //Generates a new id.
     const newEquip = push(reference);
     //Upload the new equipment.
+    const multimediaObj = {...equipRentData.multimedia}
+    equipRentData.multimedia = multimediaObj;
     await set(newEquip, equipRentData);
 
     id = newEquip.key; //Saves the new id only if the upload was correct.
@@ -101,6 +105,8 @@ export async function saveRentEquip(equipRentData, connection) {
 export async function updateRentEquip(id, equipmentData, connection) {
   if (connection) {
     const reference = ref(rtDatabase, `${TABLE_NAME}/${id}`);
+    const multimediaObj = {...equipmentData.multimedia}
+    equipmentData.multimedia = multimediaObj;
     await update(reference, equipmentData);
   }
 }

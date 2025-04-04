@@ -160,24 +160,24 @@ function NotAuthenticated() {
 function Navigation() {
   const authCtx = useContext(AuthContext);
   //We need to init the DB only with mobile version.
-  const [dbInitialized, setDbInitialized] = useState(authCtx.device !== 'web' ? false : true);
+  const [dbInitialized, setDbInitialized] = useState(true); //useState(authCtx.device !== 'web' ? false : true);
 
-  useEffect(() => {
-    async function initDB() {
-      //if (authCtx.device !== 'web') {
-        try {
-          await openDB();
-          await createTable();
-          setDbInitialized(true);
-        }
-        catch (error) {
-          console.log(error);
-        }
-      //}
-    }
-
-    initDB();
-  }, []);
+  //useEffect(() => {
+  //  async function initDB() {
+  //    //if (authCtx.device !== 'web') {
+  //      try {
+  //        await openDB();
+  //        await createTable();
+  //        setDbInitialized(true);
+  //      }
+  //      catch (error) {
+  //        console.log(error);
+  //      }
+  //    //}
+  //  }
+//
+  //  initDB();
+  //}, []);
 
   if (!dbInitialized || authCtx.isConnected === null) {
     return (

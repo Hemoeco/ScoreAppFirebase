@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } f
 
 import { Colors } from "../../consts/colors";
 import IconButton from "../UI/IconButton";
-import FilePicker from "./FilePicker";
+import FilesPicker from "./FilesPicker";
 import { RentEquip } from "../../models/rentEquip";
 import { RentEquipContext } from "../../store/rent-equip-context";
 import { AuthContext } from "../../store/auth-context";
@@ -15,6 +15,7 @@ function RentEquipForm({
   equipData,
   isEditing
 }) {
+  console.log(1);
   const headerHeight = useHeaderHeight(); // Obtener la altura del header automáticamente
   const isOffline = equipData ? equipData.disponibleOffline : false;
 
@@ -26,15 +27,16 @@ function RentEquipForm({
   const [validName, setValidName] = useState(true);
   const [enteredName, setEnteredName] = useState(equipData ? equipData.nombre : '');
   const [enteredDesc, setEnteredDesc] = useState(equipData ? equipData.descripcion : '');
-  const [selectedImage, setSelectedImage] = useState(equipData ? equipData.imagen : '');
+  //To do: Find a way of set the state for the files in FilesPicker, otherwise it's re rendered when
+  //the name or description change too. Solution: use React.memo in FilesPicker!!!
+  const [selectedFiles, setSelectedFiles] = useState(equipData ? equipData.multimedia : []);
+  const [deletedFiles, setDeletedFiles] = useState([]);
   const [availableOffline, setAvailableOffline] = useState(equipData ?
     equipData.disponibleOffline :
     !authCtx.isConnected);
-  const [deleteImageUri, setDeleteImageUri] = useState('');
   const navigation = useNavigation();
 
   //#region Methods
-
   //Set the value entered in the name input
   function onChangeName(name) {
     setEnteredName(name);
@@ -43,16 +45,6 @@ function RentEquipForm({
   //Set the value entered in the description input
   function onChangeDesc(desc) {
     setEnteredDesc(desc);
-  }
-
-  /*
-    Set the uri for the image:
-    -When the user selects or takes the image, it's the local uri.
-    -When is saved in Firebase, then it's from the server.
-  */
-  function onChangeImage(imageUri, deleteImageUri) {
-    setSelectedImage(imageUri);
-    setDeleteImageUri(deleteImageUri);
   }
 
   /* 
@@ -64,8 +56,8 @@ function RentEquipForm({
       setValidName(false);
       return;
     }
-    const equip = new RentEquip(enteredName, enteredDesc, selectedImage, availableOffline);
-    rentEquipsCtx.saveRentEquipData(isEditing, equipData?.id, equip, selectedImage, deleteImageUri);
+    const equip = new RentEquip(enteredName, enteredDesc, selectedFiles, availableOffline);
+    rentEquipsCtx.saveRentEquipData(isEditing, equipData?.id, equip, selectedFiles, deletedFiles);
   }
 
   //#endregion Methods
@@ -79,9 +71,10 @@ function RentEquipForm({
       <ScrollView keyboardShouldPersistTaps="always">
         <View>
           <Text style={styles.label}>Multimedia</Text>
-          <FilePicker
-            onChangeImage={onChangeImage}
-            imageUri={selectedImage}
+          <FilesPicker
+            onDeletedFiles={setDeletedFiles}
+            onSelectedFiles={setSelectedFiles}
+            files={selectedFiles}
             isEditing={isEditing}
             availableOffline={isOffline}
           />

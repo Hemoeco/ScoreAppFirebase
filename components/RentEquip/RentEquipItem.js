@@ -6,6 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../store/auth-context";
 
 function RentEquipItem({ rentEquip }) {
+  const multimedia = (rentEquip.multimedia && rentEquip.multimedia.length > 0) ? rentEquip.multimedia[0] : null;
   const [thumbnail, setThumbnail] = useState();
   const authCtx = useContext(AuthContext);
   const navigation = useNavigation();
@@ -19,7 +20,7 @@ function RentEquipItem({ rentEquip }) {
   );
 
   useEffect(() => {
-    if (authCtx.device !== 'web' && rentEquip.imagen && rentEquip.imagen.includes('video')) {
+    if (authCtx.device !== 'web' && multimedia && multimedia.includes('video')) {
       async function getThumbnail() {
         const { uri } = await VideoThumbnails.getThumbnailAsync(rentEquip.imagen, {
           time: 15000,
@@ -33,8 +34,8 @@ function RentEquipItem({ rentEquip }) {
     }
   }, [rentEquip]);
 
-  if (rentEquip.imagen !== '') {
-    image = <Image style={styles.imageContainer} source={{ uri: thumbnail ?? rentEquip.imagen }} />
+  if (multimedia) {
+    image = <Image style={styles.imageContainer} source={{ uri: thumbnail ?? multimedia }} />
   }
 
   function editEquipHandler() {
